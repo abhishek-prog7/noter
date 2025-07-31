@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Noter - Preview</title>
+  <style>
+    :root {
+      --bg-primary: #ffffff;
+      --bg-secondary: #f5f5f5;
+      --text-primary: #333333;
+      --text-secondary: #666666;
+      --accent-color: #4caf50;
+      --accent-hover: #45a049;
+      --header-bg: #282c34;
+      --header-text: #ffffff;
+      --border-color: #dddddd;
+      --shadow-color: rgba(0, 0, 0, 0.1);
+      --card-bg: #ffffff;
+    }
+
+    [data-theme='dark'] {
+      --bg-primary: #121212;
+      --bg-secondary: #1e1e1e;
+      --text-primary: #e0e0e0;
+      --text-secondary: #a0a0a0;
+      --accent-color: #5cbc60;
+      --accent-hover: #4caf50;
+      --header-bg: #1a1a1a;
+      --header-text: #ffffff;
+      --border-color: #333333;
+      --shadow-color: rgba(0, 0, 0, 0.3);
+      --card-bg: #1e1e1e;
+    }
+
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      transition: background-color 0.3s ease, color 0.3s ease;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+        'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+        sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    .App {
+      text-align: center;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .App-header {
+      background-color: var(--header-bg);
+      padding: 20px;
+      color: var(--header-text);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-content {
+      text-align: left;
+    }
+
+    .App-header h1 {
+      margin: 0;
+      font-size: 2rem;
+    }
+
+    .theme-toggle {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: rgba(255, 255, 255, 0.1);
+      transition: background-color 0.2s ease;
+    }
+
+    .theme-toggle:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+
+    main {
+      flex: 1;
+      padding: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    footer {
+      background-color: var(--bg-secondary);
+      padding: 10px;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    .home-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .home-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .home-header h2 {
+      margin: 0;
+      color: var(--text-primary);
+    }
+
+    .new-note-btn {
+      background-color: var(--accent-color);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 4px;
+      text-decoration: none;
+      font-weight: 500;
+      transition: background-color 0.2s ease;
+      display: inline-block;
+    }
+
+    .new-note-btn:hover {
+      background-color: var(--accent-hover);
+      text-decoration: none;
+      color: white;
+    }
+
+    .search-container {
+      position: relative;
+      margin-bottom: 20px;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 12px 40px 12px 15px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      font-size: 16px;
+      box-shadow: 0 1px 3px var(--shadow-color);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--accent-color);
+      box-shadow: 0 1px 3px rgba(76, 175, 80, 0.3);
+    }
+
+    .clear-search {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      font-size: 20px;
+      color: #999;
+      cursor: pointer;
+      padding: 0;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+    }
+
+    .clear-search:hover {
+      color: #666;
+      background-color: #f1f1f1;
+    }
+
+    .note-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .note-item {
+      background-color: var(--card-bg);
+      border-radius: 8px;
+      box-shadow: 0 2px 5px var(--shadow-color);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+    }
+
+    .note-item:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 4px 8px var(--shadow-color);
+    }
+
+    .note-link {
+      display: block;
+      padding: 20px;
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .note-title {
+      margin-top: 0;
+      margin-bottom: 10px;
+      font-size: 1.2rem;
+      color: var(--text-primary);
+    }
+
+    .note-preview {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      line-height: 1.5;
+      margin-bottom: 15px;
+    }
+
+    .note-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    .note-date {
+      font-style: italic;
+    }
+
+    .empty-notes {
+      text-align: center;
+      padding: 40px 0;
+      color: var(--text-secondary);
+      background-color: var(--bg-secondary);
+      border-radius: 8px;
+      margin-top: 20px;
+      border: 1px solid var(--border-color);
+    }
+
+    a {
+      color: var(--accent-color);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    /* Media queries */
+    @media (max-width: 768px) {
+      .note-list {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="App">
+    <header class="App-header">
+      <div class="header-content">
+        <h1>Noter</h1>
+        <p>Your personal note-taking application</p>
+      </div>
+      <button 
+        class="theme-toggle" 
+        onclick="toggleTheme()"
+        aria-label="Switch theme"
+      >
+        🌙
+      </button>
+    </header>
+    <main>
+      <div class="home-container">
+        <div class="home-header">
+          <h2>My Notes</h2>
+          <a href="#" class="new-note-btn">+ New Note</a>
+        </div>
+        
+        <div class="search-container">
+          <input
+            type="text"
+            placeholder="Search notes..."
+            id="search-input"
+            class="search-input"
+          />
+          <button class="clear-search" id="clear-search" style="display: none;">
+            ×
+          </button>
+        </div>
+        
+        <div class="note-list">
+          <div class="note-item">
+            <a href="#" class="note-link">
+              <h3 class="note-title">Welcome to Noter</h3>
+              <p class="note-preview">This is your first note! You can edit or delete this note, or create new ones.</p>
+              <div class="note-meta">
+                <span class="note-date">Last updated: Jul 31, 2025</span>
+              </div>
+            </a>
+          </div>
+          
+          <div class="note-item">
+            <a href="#" class="note-link">
+              <h3 class="note-title">How to use Noter</h3>
+              <p class="note-preview">Create, edit, and delete notes easily. Your notes will be stored in the cloud and accessible from anywhere.</p>
+              <div class="note-meta">
+                <span class="note-date">Last updated: Jul 31, 2025</span>
+              </div>
+            </a>
+          </div>
+          
+          <div class="note-item">
+            <a href="#" class="note-link">
+              <h3 class="note-title">Features</h3>
+              <p class="note-preview">Noter includes features like search, dark mode, and responsive design. Try them out!</p>
+              <div class="note-meta">
+                <span class="note-date">Last updated: Jul 31, 2025</span>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+    </main>
+    <footer>
+      <p>&copy; 2025 Noter App</p>
+    </footer>
+  </div>
+
+  <script>
+    // Theme toggling
+    function toggleTheme() {
+      const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+      const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+      
+      document.documentElement.setAttribute('data-theme', newTheme);
+      
+      // Update button text
+      const themeToggle = document.querySelector('.theme-toggle');
+      themeToggle.innerHTML = newTheme === 'light' ? '🌙' : '☀️';
+      
+      // Save preference
+      localStorage.setItem('theme', newTheme);
+    }
+    
+    // Initialize theme
+    function initTheme() {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme) {
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        const themeToggle = document.querySelector('.theme-toggle');
+        themeToggle.innerHTML = savedTheme === 'light' ? '🌙' : '☀️';
+      } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        const themeToggle = document.querySelector('.theme-toggle');
+        themeToggle.innerHTML = '☀️';
+      }
+    }
+    
+    // Search functionality
+    function setupSearch() {
+      const searchInput = document.getElementById('search-input');
+      const clearButton = document.getElementById('clear-search');
+      const noteItems = document.querySelectorAll('.note-item');
+      
+      searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        clearButton.style.display = searchTerm ? 'flex' : 'none';
+        
+        noteItems.forEach(item => {
+          const title = item.querySelector('.note-title').textContent.toLowerCase();
+          const content = item.querySelector('.note-preview').textContent.toLowerCase();
+          
+          if (title.includes(searchTerm) || content.includes(searchTerm)) {
+            item.style.display = 'block';
+          } else {
+            item.style.display = 'none';
+          }
+        });
+      });
+      
+      clearButton.addEventListener('click', function() {
+        searchInput.value = '';
+        searchInput.dispatchEvent(new Event('input'));
+      });
+    }
+    
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+      initTheme();
+      setupSearch();
+    });
+  </script>
+</body>
+</html>
