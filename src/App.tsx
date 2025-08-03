@@ -13,7 +13,7 @@ const AppContent: React.FC = () => {
       <header className="App-header">
         <div className="header-content">
           <h1>Noter</h1>
-          <p>Your personal note-taking application</p>
+          <p>Your personal note-taking application! Enjoy</p>
         </div>
         <button 
           className="theme-toggle" 
