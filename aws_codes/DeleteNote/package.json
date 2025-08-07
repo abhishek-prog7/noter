@@ -1,0 +1,14 @@
+{
+  "name": "delete-note",
+  "version": "1.0.0",
+  "description": "Lambda function to delete a note from DynamoDB",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.32.0",
+    "@aws-sdk/lib-dynamodb": "^3.32.0",
+    "@aws-sdk/credential-providers": "^3.32.0"
+  }
+}

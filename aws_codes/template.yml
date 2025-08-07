@@ -1,0 +1,166 @@
+# This AWS SAM template has been generated from your function's configuration. If
+# your function has one or more triggers, note that the AWS resources associated
+# with these triggers aren't fully specified in this template and include
+# placeholder values. Open this template in AWS Infrastructure Composer or your
+# favorite IDE and modify it to specify a serverless application with other AWS
+# resources.
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: An AWS Serverless Application Model template describing your function.
+
+Globals:
+  Api:
+    Cors:
+      AllowMethods: '''*'''
+      AllowHeaders: '''*'''
+      AllowOrigin: '''*'''
+    EndpointConfiguration: REGIONAL
+Resources:
+  GetAllNotes:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: GetAllNotes/src
+      Description: ''
+      MemorySize: 128
+      Timeout: 3
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Architectures:
+        - x86_64
+      EphemeralStorage:
+        Size: 512
+      EventInvokeConfig:
+        MaximumEventAgeInSeconds: 21600
+        MaximumRetryAttempts: 2
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: /notes
+            Method: get
+            RestApiId: !Ref ServerlessRestApi
+      PackageType: Zip
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - logs:CreateLogGroup
+              Resource: arn:aws:logs:us-east-1:445567078009:*
+            - Effect: Allow
+              Action:
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+              Resource:
+                - arn:aws:logs:us-east-1:445567078009:log-group:/aws/lambda/GetAllNotes:*
+      RecursiveLoop: Terminate
+      SnapStart:
+        ApplyOn: None
+      RuntimeManagementConfig:
+        UpdateRuntimeOn: Auto
+  NoteById:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: !Sub Stack ${AWS::StackName} Function NoteById
+      CodeUri: NoteById/src
+      Handler: index.handler
+      Runtime: nodejs18.x
+      MemorySize: 3008
+      Timeout: 30
+      Tracing: Active
+      Events:
+        ServerlessRestApiGETnotesid:
+          Type: Api
+          Properties:
+            Path: /notes/{id}
+            Method: GET
+            RestApiId: !Ref ServerlessRestApi
+      Environment: {}
+  NoteByIdLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Retain
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${NoteById}
+
+  CreateNote:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: !Sub Stack ${AWS::StackName} Function CreateNote
+      CodeUri: CreateNote/src
+      Handler: index.handler
+      Runtime: nodejs18.x
+      MemorySize: 3008
+      Timeout: 30
+      Tracing: Active
+      Events:
+        ServerlessRestApiPOSTnotes:
+          Type: Api
+          Properties:
+            Path: /notes
+            Method: POST
+            RestApiId: !Ref ServerlessRestApi
+        ServerlessRestApiOPTIONSnotes:
+          Type: Api
+          Properties:
+            Path: /notes
+            Method: OPTIONS
+            RestApiId: !Ref ServerlessRestApi
+      Environment: {}
+  CreateNoteLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Retain
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${CreateNote}
+
+  UpdateNote:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: !Sub Stack ${AWS::StackName} Function UpdateNote
+      CodeUri: UpdateNote/src
+      Handler: index.handler
+      Runtime: nodejs18.x
+      MemorySize: 3008
+      Timeout: 30
+      Tracing: Active
+      Events:
+        ServerlessRestApiPUTnotesid:
+          Type: Api
+          Properties:
+            Path: /notes/{id}
+            Method: PUT
+            RestApiId: !Ref ServerlessRestApi
+        ServerlessRestApiOPTIONSnotesid:
+          Type: Api
+          Properties:
+            Path: /notes/{id}
+            Method: OPTIONS
+            RestApiId: !Ref ServerlessRestApi
+      Environment: {}
+  UpdateNoteLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Retain
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${UpdateNote}
+
+  DeleteNote:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: !Sub Stack ${AWS::StackName} Function DeleteNote
+      CodeUri: DeleteNote/src
+      Handler: index.handler
+      Runtime: nodejs18.x
+      MemorySize: 3008
+      Timeout: 30
+      Tracing: Active
+      Events:
+        ServerlessRestApiDELETEnotesid:
+          Type: Api
+          Properties:
+            Path: /notes/{id}
+            Method: DELETE
+            RestApiId: !Ref ServerlessRestApi
+      Environment: {}
+  DeleteNoteLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Retain
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${DeleteNote}
