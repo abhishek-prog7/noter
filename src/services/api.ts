@@ -1,8 +1,8 @@
 import axios from 'axios';
 import { Note } from '../models/Note';
 
-// This would be your API Gateway URL in production
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://your-api-gateway-url.execute-api.region.amazonaws.com/stage';
+// API Gateway URL from environment variables
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
 // Create axios instance with base configuration
 const apiClient = axios.create({
@@ -12,61 +12,110 @@ const apiClient = axios.create({
   }
 });
 
-// API service for notes
+// API service for notes - connects to Lambda functions
 export const noteService = {
-  // Get all notes
+  // Get all notes - connects to GetAllNotes Lambda
   getAllNotes: async (): Promise<Note[]> => {
-    // For development without backend, return mock data
-    if (!process.env.REACT_APP_API_URL) {
-      return mockNotes();
+    try {
+      const response = await apiClient.get('/notes');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching notes:', error);
+      // Fallback to mock data if API is not available
+      if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
+        console.warn('Using mock data as fallback');
+        return mockNotes();
+      }
+      throw error;
     }
-    
-    const response = await apiClient.get('/notes');
-    return response.data;
   },
   
-  // Get a single note by id
+  // Get a single note by id - connects to NoteById Lambda
   getNote: async (id: string): Promise<Note> => {
-    // For development without backend, return mock data
-    if (!process.env.REACT_APP_API_URL) {
-      return mockNoteById(id);
+    try {
+      const response = await apiClient.get(`/notes/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching note ${id}:`, error);
+      // Fallback to mock data if API is not available
+      if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
+        console.warn('Using mock data as fallback');
+        return mockNoteById(id);
+      }
+      throw error;
     }
-    
-    const response = await apiClient.get(`/notes/${id}`);
-    return response.data;
   },
   
-  // Create a new note
+  // Create a new note - connects to CreateNote Lambda
   createNote: async (note: Omit<Note, 'id' | 'createdAt' | 'updatedAt'>): Promise<Note> => {
-    // For development without backend, return mock data
-    if (!process.env.REACT_APP_API_URL) {
-      return mockCreateNote(note);
+    try {
+      console.log('Making POST request to create note:', note);
+      console.log('API URL:', API_BASE_URL);
+      
+      const response = await apiClient.post('/notes', note);
+      console.log('Create note response:', response);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error creating note:', error);
+      console.error('Error details:', error.response?.data || 'No response data');
+      console.error('Status:', error.response?.status || 'No status');
+      
+      // Temporarily disable mock data fallback to see actual errors
+      console.warn('Mock data fallback disabled - showing actual error');
+      // if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
+      //   console.warn('Using mock data as fallback');
+      //   return mockCreateNote(note);
+      // }
+      throw error;
     }
-    
-    const response = await apiClient.post('/notes', note);
-    return response.data;
   },
   
-  // Update an existing note
+  // Update an existing note - will need to implement this Lambda function
   updateNote: async (id: string, note: Partial<Note>): Promise<Note> => {
-    // For development without backend, return mock data
-    if (!process.env.REACT_APP_API_URL) {
-      return mockUpdateNote(id, note);
+    try {
+      console.log('Making PUT request to update note:', id, note);
+      console.log('API URL:', API_BASE_URL);
+      
+      const response = await apiClient.put(`/notes/${id}`, note);
+      console.log('Update note response:', response);
+      return response.data;
+    } catch (error: any) {
+      console.error(`Error updating note ${id}:`, error);
+      console.error('Error details:', error.response?.data || 'No response data');
+      console.error('Status:', error.response?.status || 'No status');
+      
+      // Temporarily disable mock data fallback to see actual errors
+      console.warn('Mock data fallback disabled - showing actual error');
+      // if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
+      //   console.warn('Using mock data as fallback');
+      //   return mockUpdateNote(id, note);
+      // }
+      throw error;
     }
-    
-    const response = await apiClient.put(`/notes/${id}`, note);
-    return response.data;
   },
   
-  // Delete a note
+  // Delete a note - will need to implement this Lambda function
   deleteNote: async (id: string): Promise<void> => {
-    // For development without backend, do nothing
-    if (!process.env.REACT_APP_API_URL) {
-      mockDeleteNote(id);
-      return;
+    try {
+      console.log('Making DELETE request to delete note:', id);
+      console.log('API URL:', API_BASE_URL);
+      
+      const response = await apiClient.delete(`/notes/${id}`);
+      console.log('Delete note response:', response);
+    } catch (error: any) {
+      console.error(`Error deleting note ${id}:`, error);
+      console.error('Error details:', error.response?.data || 'No response data');
+      console.error('Status:', error.response?.status || 'No status');
+      
+      // Temporarily disable mock data fallback to see actual errors
+      console.warn('Mock data fallback disabled - showing actual error');
+      // if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
+      //   console.warn('Using mock data as fallback');
+      //   mockDeleteNote(id);
+      //   return;
+      // }
+      throw error;
     }
-    
-    await apiClient.delete(`/notes/${id}`);
   }
 };
 
