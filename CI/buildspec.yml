@@ -7,7 +7,7 @@ phases:
     commands:
       - echo Installing dependencies...
       - npm install -g aws-cli
-      - npm install -g aws-sam-cli
+      #- npm install -g aws-sam-cli
       - apt-get update
       - apt-get install -y docker.io
       - docker --version
@@ -75,10 +75,10 @@ phases:
       - cd ..
       
       # Deploy SAM application
-      - echo Deploying SAM application...
-      - cd ..
-      - sam build
-      - sam deploy --no-confirm-changeset --no-fail-on-empty-changeset
+      #- echo Deploying SAM application...
+      #- cd ..
+      #- sam build
+      #- sam deploy --no-confirm-changeset --no-fail-on-empty-changeset
 
   post_build:
     commands:
