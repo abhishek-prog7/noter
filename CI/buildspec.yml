@@ -1,0 +1,106 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 18
+    commands:
+      - echo Installing dependencies...
+      - npm install -g aws-cli
+      - npm install -g aws-sam-cli
+      - apt-get update
+      - apt-get install -y docker.io
+      - docker --version
+
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+      - REPOSITORY_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - IMAGE_TAG=${COMMIT_HASH:=latest}
+      - echo Building and deploying static website...
+      - cd frontend
+      - npm install
+      - npm run build
+
+  build:
+    commands:
+      # Deploy frontend to S3
+      - echo Deploying frontend to S3...
+      - aws s3 sync build/ s3://my-noter-bucket/ --delete
+      
+      # Build and push Lambda Docker images
+      - echo Building and pushing Lambda Docker images...
+      - cd ../aws_codes
+      
+      # GetAllNotes Lambda
+      - echo Building GetAllNotes Lambda...
+      - cd GetAllNotes
+      - docker build -t noter-getallnotes:$IMAGE_TAG .
+      - docker tag noter-getallnotes:$IMAGE_TAG $REPOSITORY_URI/noter-getallnotes:$IMAGE_TAG
+      - docker push $REPOSITORY_URI/noter-getallnotes:$IMAGE_TAG
+      - cd ..
+      
+      # CreateNote Lambda
+      - echo Building CreateNote Lambda...
+      - cd CreateNote
+      - docker build -t noter-createnote:$IMAGE_TAG .
+      - docker tag noter-createnote:$IMAGE_TAG $REPOSITORY_URI/noter-createnote:$IMAGE_TAG
+      - docker push $REPOSITORY_URI/noter-createnote:$IMAGE_TAG
+      - cd ..
+      
+      # DeleteNote Lambda
+      - echo Building DeleteNote Lambda...
+      - cd DeleteNote
+      - docker build -t noter-deletenote:$IMAGE_TAG .
+      - docker tag noter-deletenote:$IMAGE_TAG $REPOSITORY_URI/noter-deletenote:$IMAGE_TAG
+      - docker push $REPOSITORY_URI/noter-deletenote:$IMAGE_TAG
+      - cd ..
+      
+      # NoteById Lambda
+      - echo Building NoteById Lambda...
+      - cd NoteById
+      - docker build -t noter-notebyid:$IMAGE_TAG .
+      - docker tag noter-notebyid:$IMAGE_TAG $REPOSITORY_URI/noter-notebyid:$IMAGE_TAG
+      - docker push $REPOSITORY_URI/noter-notebyid:$IMAGE_TAG
+      - cd ..
+      
+      # UpdateNote Lambda
+      - echo Building UpdateNote Lambda...
+      - cd UpdateNote
+      - docker build -t noter-updatenote:$IMAGE_TAG .
+      - docker tag noter-updatenote:$IMAGE_TAG $REPOSITORY_URI/noter-updatenote:$IMAGE_TAG
+      - docker push $REPOSITORY_URI/noter-updatenote:$IMAGE_TAG
+      - cd ..
+      
+      # Deploy SAM application
+      - echo Deploying SAM application...
+      - cd ..
+      - sam build
+      - sam deploy --no-confirm-changeset --no-fail-on-empty-changeset
+
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo Invalidating CloudFront cache...
+      - |
+        if [ ! -z "$CLOUDFRONT_DISTRIBUTION_ID" ]; then
+          aws cloudfront create-invalidation --distribution-id $CLOUDFRONT_DISTRIBUTION_ID --paths "/*"
+        fi
+
+artifacts:
+  files:
+    - appspec.yml
+    - aws_codes/template.yml
+    - aws_codes/samconfig.toml
+
+cache:
+  paths:
+    - 'frontend/node_modules/**/*'
+
+env:
+  variables:
+    AWS_ACCOUNT_ID: "YOUR_AWS_ACCOUNT_ID"  # Replace with your AWS account ID or use environment variables
+  parameter-store:
+    CLOUDFRONT_DISTRIBUTION_ID: "/noter/cloudfront-distribution-id"  # Optional, if you're using CloudFront

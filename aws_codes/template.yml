@@ -19,12 +19,10 @@ Resources:
   GetAllNotes:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: GetAllNotes/src
+      PackageType: Image
       Description: ''
       MemorySize: 128
       Timeout: 3
-      Handler: index.handler
-      Runtime: nodejs18.x
       Architectures:
         - x86_64
       EphemeralStorage:
@@ -39,7 +37,12 @@ Resources:
             Path: /notes
             Method: get
             RestApiId: !Ref ServerlessRestApi
-      PackageType: Zip
+        ServerlessRestApiGET:
+          Type: Api
+          Properties:
+            Path: /
+            Method: GET
+            RestApiId: !Ref ServerlessRestApi
       Policies:
         - Statement:
             - Effect: Allow
@@ -57,13 +60,15 @@ Resources:
         ApplyOn: None
       RuntimeManagementConfig:
         UpdateRuntimeOn: Auto
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: ./GetAllNotes
+      DockerTag: latest
   NoteById:
     Type: AWS::Serverless::Function
     Properties:
       Description: !Sub Stack ${AWS::StackName} Function NoteById
-      CodeUri: NoteById/src
-      Handler: index.handler
-      Runtime: nodejs18.x
+      PackageType: Image
       MemorySize: 3008
       Timeout: 30
       Tracing: Active
@@ -75,6 +80,10 @@ Resources:
             Method: GET
             RestApiId: !Ref ServerlessRestApi
       Environment: {}
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: ./NoteById
+      DockerTag: latest
   NoteByIdLogGroup:
     Type: AWS::Logs::LogGroup
     DeletionPolicy: Retain
@@ -85,9 +94,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Description: !Sub Stack ${AWS::StackName} Function CreateNote
-      CodeUri: CreateNote/src
-      Handler: index.handler
-      Runtime: nodejs18.x
+      PackageType: Image
       MemorySize: 3008
       Timeout: 30
       Tracing: Active
@@ -105,6 +112,10 @@ Resources:
             Method: OPTIONS
             RestApiId: !Ref ServerlessRestApi
       Environment: {}
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: ./CreateNote
+      DockerTag: latest
   CreateNoteLogGroup:
     Type: AWS::Logs::LogGroup
     DeletionPolicy: Retain
@@ -115,9 +126,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Description: !Sub Stack ${AWS::StackName} Function UpdateNote
-      CodeUri: UpdateNote/src
-      Handler: index.handler
-      Runtime: nodejs18.x
+      PackageType: Image
       MemorySize: 3008
       Timeout: 30
       Tracing: Active
@@ -135,6 +144,10 @@ Resources:
             Method: OPTIONS
             RestApiId: !Ref ServerlessRestApi
       Environment: {}
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: ./UpdateNote
+      DockerTag: latest
   UpdateNoteLogGroup:
     Type: AWS::Logs::LogGroup
     DeletionPolicy: Retain
@@ -145,9 +158,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Description: !Sub Stack ${AWS::StackName} Function DeleteNote
-      CodeUri: DeleteNote/src
-      Handler: index.handler
-      Runtime: nodejs18.x
+      PackageType: Image
       MemorySize: 3008
       Timeout: 30
       Tracing: Active
@@ -159,8 +170,33 @@ Resources:
             Method: DELETE
             RestApiId: !Ref ServerlessRestApi
       Environment: {}
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: ./DeleteNote
+      DockerTag: latest
   DeleteNoteLogGroup:
     Type: AWS::Logs::LogGroup
     DeletionPolicy: Retain
     Properties:
       LogGroupName: !Sub /aws/lambda/${DeleteNote}
+  ServerlessRestApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub ServerlessRestApi From Stack ${AWS::StackName}
+      StageName: Prod
+      DefinitionBody:
+        openapi: '3.0'
+        info: {}
+        paths:
+          /:
+            get:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetAllNotes.Arn}/invocations
+              responses: {}
+      EndpointConfiguration:
+        Type: REGIONAL
+      TracingEnabled: true
+      Cors:
+        MaxAge: 5
