@@ -84,10 +84,10 @@ phases:
     commands:
       - echo Build completed on `date`
       - echo Invalidating CloudFront cache...
-      - |
-        if [ ! -z "$CLOUDFRONT_DISTRIBUTION_ID" ]; then
-          aws cloudfront create-invalidation --distribution-id $CLOUDFRONT_DISTRIBUTION_ID --paths "/*"
-        fi
+      #- |
+      #  if [ ! -z "$CLOUDFRONT_DISTRIBUTION_ID" ]; then
+      #    aws cloudfront create-invalidation --distribution-id $CLOUDFRONT_DISTRIBUTION_ID --paths "/*"
+      #  fi
 
 artifacts:
   files:
@@ -101,6 +101,6 @@ cache:
 
 env:
   variables:
-    AWS_ACCOUNT_ID: "YOUR_AWS_ACCOUNT_ID"  # Replace with your AWS account ID or use environment variables
-  parameter-store:
-    CLOUDFRONT_DISTRIBUTION_ID: "/noter/cloudfront-distribution-id"  # Optional, if you're using CloudFront
+    AWS_ACCOUNT_ID: "445567078009"  # Replace with your AWS account ID or use environment variables
+  #parameter-store:
+  #  CLOUDFRONT_DISTRIBUTION_ID: "/noter/cloudfront-distribution-id"  # Optional, if you're using CloudFront
