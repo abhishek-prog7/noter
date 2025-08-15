@@ -48,6 +48,7 @@ jobs:
       - name: build
         run: |
           export REACT_APP_API_URL=${{ inputs.api_gateway_url }}
+          export CI=false
           npm run build
           
       - name: Configure AWS credentials
