@@ -10,6 +10,7 @@ on:
 
 env:
   AWS_REGION: "us-east-1"  # Replace with your AWS region
+  IMAGE_TAG: "latest"
 
 jobs:
   build-and-push:
@@ -44,8 +45,8 @@ jobs:
 
       - name: Build, tag, and push ${{ matrix.service.name }} image to Amazon ECR
         id: build-image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./aws_codes/${{ matrix.service.path }}
-          push: true
-          tags: ${{ steps.login.outputs.registry }}/${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/noter-${{ matrix.service.name }}:${{ env.IMAGE_TAG }}
+        run: |
+          cd ./aws_codes/${{ matrix.service.path }}
+          docker build -t noter/${{ matrix.service.name }}:${{ env.IMAGE_TAG }} .
+          docker tag noter/${{ matrix.service.name }}:${{ env.IMAGE_TAG }} ${{ steps.login.outputs.registry }}/noter/${{ matrix.service.name }}:${{ env.IMAGE_TAG }}
+          docker push ${{ steps.login.outputs.registry }}/noter/${{ matrix.service.name }}:${{ env.IMAGE_TAG }}
