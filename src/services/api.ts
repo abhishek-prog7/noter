@@ -7,9 +7,7 @@ const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 // Create axios instance with base configuration
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json'
-  }
+  // Do not set Content-Type globally; keep GET/DELETE as simple requests to avoid CORS preflight
 });
 
 // API service for notes - connects to Lambda functions
@@ -52,7 +50,9 @@ export const noteService = {
       console.log('Making POST request to create note:', note);
       console.log('API URL:', API_BASE_URL);
       
-      const response = await apiClient.post('/notes', note);
+      const response = await apiClient.post('/notes', note, {
+        headers: { 'Content-Type': 'application/json' }
+      });
       console.log('Create note response:', response);
       return response.data;
     } catch (error: any) {
@@ -76,7 +76,9 @@ export const noteService = {
       console.log('Making PUT request to update note:', id, note);
       console.log('API URL:', API_BASE_URL);
       
-      const response = await apiClient.put(`/notes/${id}`, note);
+      const response = await apiClient.put(`/notes/${id}`, note, {
+        headers: { 'Content-Type': 'application/json' }
+      });
       console.log('Update note response:', response);
       return response.data;
     } catch (error: any) {
