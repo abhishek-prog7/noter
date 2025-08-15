@@ -15,12 +15,18 @@ on:
         description: 'API URL'
         required: true
         default: 'https://xx4gdonbrk.execute-api.us-east-1.amazonaws.com/initial'
+      bucket_name:
+        description: 'S3 bucket name for frontend deployment'
+        required: false
+        default: 'my-noter-bucket'
+        
 env:
   AWS_REGION: "us-east-1"  # Replace with your AWS region
   IMAGE_TAG: "latest"
 
 jobs:
   build-noter-publish:
+    if: ${{ inputs.publish_noter == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -29,6 +35,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
+      - name: Cache node modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+            
       - name: install dependencies
         run: npm install
       - name: build
@@ -44,7 +58,11 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
       - name: publish to s3
         run: |
-          export BUCKET_NAME="my-noter-bucket"
+          export BUCKET_NAME="${{ inputs.bucket_name }}"
+          if ! aws s3 ls s3://$BUCKET_NAME 2>&1 > /dev/null; then
+            echo "Creating bucket $BUCKET_NAME..."
+            aws s3 mb s3://$BUCKET_NAME --region ${{ env.AWS_REGION }}
+          fi
           echo "Syncing build files to S3..."
           aws s3 sync build/ s3://$BUCKET_NAME/ --delete
           echo "Setting S3 website configuration..."
@@ -53,6 +71,7 @@ jobs:
 
       
   build-and-push:
+    if: ${{ inputs.publish_lambda == 'true' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -81,6 +100,11 @@ jobs:
       - name: Login to Amazon ECR
         id: login
         uses: aws-actions/amazon-ecr-login@v1
+        
+      - name: Ensure ECR repository exists
+        run: |
+          aws ecr describe-repositories --repository-names noter/${{ matrix.service.name }} || \
+          aws ecr create-repository --repository-name noter/${{ matrix.service.name }}
 
       - name: Build, tag, and push ${{ matrix.service.name }} image to Amazon ECR
         id: build-image
