@@ -6,7 +6,7 @@ on:
       publish_noter:
         description: 'Publish noter to s3'
         required: true
-        default: 'false'
+        default: 'true'
       publish_lambda:
         description: 'Publish lambda to ecr'
         required: true
