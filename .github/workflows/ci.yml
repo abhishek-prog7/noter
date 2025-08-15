@@ -2,6 +2,11 @@ name: "CI pipeline to build and publish lambda docker images to ecr"
 
 on:
   workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to run workflow on'
+        required: true
+        default: 'aws_code_change'
 
 env:
   AWS_REGION: "us-east-1"  # Replace with your AWS region
