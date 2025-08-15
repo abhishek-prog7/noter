@@ -41,8 +41,13 @@ Create the following Lambda functions for CRUD operations:
 ### GetAllNotes
 
 ```javascript
-const AWS = require('aws-sdk');
-const docClient = new AWS.DynamoDB.DocumentClient();
+// Using AWS SDK v3
+const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
+const { DynamoDBDocumentClient, ScanCommand } = require('@aws-sdk/lib-dynamodb');
+
+// Initialize the DynamoDB client
+const client = new DynamoDBClient({ region: process.env.AWS_REGION || 'us-east-1' });
+const docClient = DynamoDBDocumentClient.from(client);
 
 exports.handler = async (event) => {
   const params = {
@@ -50,7 +55,8 @@ exports.handler = async (event) => {
   };
   
   try {
-    const data = await docClient.scan(params).promise();
+    const command = new ScanCommand(params);
+    const data = await docClient.send(command);
     return {
       statusCode: 200,
       headers: {
@@ -75,8 +81,13 @@ exports.handler = async (event) => {
 ### GetNoteById
 
 ```javascript
-const AWS = require('aws-sdk');
-const docClient = new AWS.DynamoDB.DocumentClient();
+// Using AWS SDK v3
+const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
+const { DynamoDBDocumentClient, GetCommand } = require('@aws-sdk/lib-dynamodb');
+
+// Initialize the DynamoDB client
+const client = new DynamoDBClient({ region: process.env.AWS_REGION || 'us-east-1' });
+const docClient = DynamoDBDocumentClient.from(client);
 
 exports.handler = async (event) => {
   const noteId = event.pathParameters.id;
@@ -89,7 +100,8 @@ exports.handler = async (event) => {
   };
   
   try {
-    const data = await docClient.get(params).promise();
+    const command = new GetCommand(params);
+    const data = await docClient.send(command);
     
     if (!data.Item) {
       return {
@@ -126,9 +138,14 @@ exports.handler = async (event) => {
 ### CreateNote
 
 ```javascript
-const AWS = require('aws-sdk');
+// Using AWS SDK v3
+const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
+const { DynamoDBDocumentClient, PutCommand } = require('@aws-sdk/lib-dynamodb');
 const { v4: uuidv4 } = require('uuid');
-const docClient = new AWS.DynamoDB.DocumentClient();
+
+// Initialize the DynamoDB client
+const client = new DynamoDBClient({ region: process.env.AWS_REGION || 'us-east-1' });
+const docClient = DynamoDBDocumentClient.from(client);
 
 exports.handler = async (event) => {
   const requestBody = JSON.parse(event.body);
@@ -160,7 +177,8 @@ exports.handler = async (event) => {
   };
   
   try {
-    await docClient.put(params).promise();
+    const command = new PutCommand(params);
+    await docClient.send(command);
     
     return {
       statusCode: 201,
@@ -186,8 +204,13 @@ exports.handler = async (event) => {
 ### UpdateNote
 
 ```javascript
-const AWS = require('aws-sdk');
-const docClient = new AWS.DynamoDB.DocumentClient();
+// Using AWS SDK v3
+const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
+const { DynamoDBDocumentClient, GetCommand, UpdateCommand } = require('@aws-sdk/lib-dynamodb');
+
+// Initialize the DynamoDB client
+const client = new DynamoDBClient({ region: process.env.AWS_REGION || 'us-east-1' });
+const docClient = DynamoDBDocumentClient.from(client);
 
 exports.handler = async (event) => {
   const noteId = event.pathParameters.id;
@@ -203,7 +226,8 @@ exports.handler = async (event) => {
   };
   
   try {
-    const data = await docClient.get(getParams).promise();
+    const getCommand = new GetCommand(getParams);
+    const data = await docClient.send(getCommand);
     
     if (!data.Item) {
       return {
@@ -233,7 +257,8 @@ exports.handler = async (event) => {
       ReturnValues: 'ALL_NEW'
     };
     
-    const updateResult = await docClient.update(updateParams).promise();
+    const updateCommand = new UpdateCommand(updateParams);
+    const updateResult = await docClient.send(updateCommand);
     
     return {
       statusCode: 200,
@@ -259,8 +284,13 @@ exports.handler = async (event) => {
 ### DeleteNote
 
 ```javascript
-const AWS = require('aws-sdk');
-const docClient = new AWS.DynamoDB.DocumentClient();
+// Using AWS SDK v3
+const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
+const { DynamoDBDocumentClient, DeleteCommand } = require('@aws-sdk/lib-dynamodb');
+
+// Initialize the DynamoDB client
+const client = new DynamoDBClient({ region: process.env.AWS_REGION || 'us-east-1' });
+const docClient = DynamoDBDocumentClient.from(client);
 
 exports.handler = async (event) => {
   const noteId = event.pathParameters.id;
@@ -273,7 +303,8 @@ exports.handler = async (event) => {
   };
   
   try {
-    await docClient.delete(params).promise();
+    const command = new DeleteCommand(params);
+    await docClient.send(command);
     
     return {
       statusCode: 204,
@@ -321,6 +352,15 @@ Ensure your Lambda functions have the following permissions:
 1. Create an IAM role for Lambda functions with:
    - `AWSLambdaBasicExecutionRole` for CloudWatch Logs
    - Custom policy for DynamoDB access:
+
+> **Note**: When using AWS SDK v3, you need to install the following packages for each Lambda function:
+> ```
+> npm install @aws-sdk/client-dynamodb @aws-sdk/lib-dynamodb
+> ```
+> For the CreateNote function, you'll also need:
+> ```
+> npm install uuid
+> ```
 
 ```json
 {

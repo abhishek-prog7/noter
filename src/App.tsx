@@ -40,7 +40,7 @@ const AppContent: React.FC = () => {
 function App() {
   return (
     <ThemeProvider>
-      <Router>
+      <Router >
         <AppContent />
       </Router>
     </ThemeProvider>

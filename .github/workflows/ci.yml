@@ -1,0 +1,51 @@
+name: "CI pipeline to build and publish lambda docker images to ecr"
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to run workflow on'
+        required: true
+        default: 'aws_code_change'
+
+env:
+  AWS_REGION: "us-east-1"  # Replace with your AWS region
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service:
+          - name: getallnotes
+            path: GetAllNotes
+          - name: createnote
+            path: CreateNote
+          - name: deletenote
+            path: DeleteNote
+          - name: notebyid
+            path: NoteById
+          - name: updatenote
+            path: UpdateNote
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build, tag, and push ${{ matrix.service.name }} image to Amazon ECR
+        id: build-image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./aws_codes/${{ matrix.service.path }}
+          push: true
+          tags: ${{ steps.login.outputs.registry }}/${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/noter-${{ matrix.service.name }}:${{ env.IMAGE_TAG }}

@@ -1,0 +1,202 @@
+# This AWS SAM template has been generated from your function's configuration. If
+# your function has one or more triggers, note that the AWS resources associated
+# with these triggers aren't fully specified in this template and include
+# placeholder values. Open this template in AWS Infrastructure Composer or your
+# favorite IDE and modify it to specify a serverless application with other AWS
+# resources.
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: An AWS Serverless Application Model template describing your function.
+
+Globals:
+  Api:
+    Cors:
+      AllowMethods: '''*'''
+      AllowHeaders: '''*'''
+      AllowOrigin: '''*'''
+    EndpointConfiguration: REGIONAL
+Resources:
+  GetAllNotes:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      Description: ''
+      MemorySize: 128
+      Timeout: 3
+      Architectures:
+        - x86_64
+      EphemeralStorage:
+        Size: 512
+      EventInvokeConfig:
+        MaximumEventAgeInSeconds: 21600
+        MaximumRetryAttempts: 2
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: /notes
+            Method: get
+            RestApiId: !Ref ServerlessRestApi
+        ServerlessRestApiGET:
+          Type: Api
+          Properties:
+            Path: /
+            Method: GET
+            RestApiId: !Ref ServerlessRestApi
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - logs:CreateLogGroup
+              Resource: arn:aws:logs:us-east-1:445567078009:*
+            - Effect: Allow
+              Action:
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+              Resource:
+                - arn:aws:logs:us-east-1:445567078009:log-group:/aws/lambda/GetAllNotes:*
+      RecursiveLoop: Terminate
+      SnapStart:
+        ApplyOn: None
+      RuntimeManagementConfig:
+        UpdateRuntimeOn: Auto
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: ./GetAllNotes
+      DockerTag: latest
+  NoteById:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: !Sub Stack ${AWS::StackName} Function NoteById
+      PackageType: Image
+      MemorySize: 3008
+      Timeout: 30
+      Tracing: Active
+      Events:
+        ServerlessRestApiGETnotesid:
+          Type: Api
+          Properties:
+            Path: /notes/{id}
+            Method: GET
+            RestApiId: !Ref ServerlessRestApi
+      Environment: {}
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: ./NoteById
+      DockerTag: latest
+  NoteByIdLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Retain
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${NoteById}
+
+  CreateNote:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: !Sub Stack ${AWS::StackName} Function CreateNote
+      PackageType: Image
+      MemorySize: 3008
+      Timeout: 30
+      Tracing: Active
+      Events:
+        ServerlessRestApiPOSTnotes:
+          Type: Api
+          Properties:
+            Path: /notes
+            Method: POST
+            RestApiId: !Ref ServerlessRestApi
+        ServerlessRestApiOPTIONSnotes:
+          Type: Api
+          Properties:
+            Path: /notes
+            Method: OPTIONS
+            RestApiId: !Ref ServerlessRestApi
+      Environment: {}
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: ./CreateNote
+      DockerTag: latest
+  CreateNoteLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Retain
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${CreateNote}
+
+  UpdateNote:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: !Sub Stack ${AWS::StackName} Function UpdateNote
+      PackageType: Image
+      MemorySize: 3008
+      Timeout: 30
+      Tracing: Active
+      Events:
+        ServerlessRestApiPUTnotesid:
+          Type: Api
+          Properties:
+            Path: /notes/{id}
+            Method: PUT
+            RestApiId: !Ref ServerlessRestApi
+        ServerlessRestApiOPTIONSnotesid:
+          Type: Api
+          Properties:
+            Path: /notes/{id}
+            Method: OPTIONS
+            RestApiId: !Ref ServerlessRestApi
+      Environment: {}
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: ./UpdateNote
+      DockerTag: latest
+  UpdateNoteLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Retain
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${UpdateNote}
+
+  DeleteNote:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: !Sub Stack ${AWS::StackName} Function DeleteNote
+      PackageType: Image
+      MemorySize: 3008
+      Timeout: 30
+      Tracing: Active
+      Events:
+        ServerlessRestApiDELETEnotesid:
+          Type: Api
+          Properties:
+            Path: /notes/{id}
+            Method: DELETE
+            RestApiId: !Ref ServerlessRestApi
+      Environment: {}
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: ./DeleteNote
+      DockerTag: latest
+  DeleteNoteLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Retain
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${DeleteNote}
+  ServerlessRestApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub ServerlessRestApi From Stack ${AWS::StackName}
+      StageName: Prod
+      DefinitionBody:
+        openapi: '3.0'
+        info: {}
+        paths:
+          /:
+            get:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetAllNotes.Arn}/invocations
+              responses: {}
+      EndpointConfiguration:
+        Type: REGIONAL
+      TracingEnabled: true
+      Cors:
+        MaxAge: 5
