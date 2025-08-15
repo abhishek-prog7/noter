@@ -1,3 +1,5 @@
 node_modules
 .vscode
 aws_codes/.aws-sam
+build
+.windsurf
